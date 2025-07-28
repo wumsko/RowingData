@@ -54,6 +54,25 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
     let totalCount = null;
     let filteredPersons = [];
     let totalFetched = 0;
+    let personPoints = [];
+    let allPointsFetched = false;
+    // Dynamically add/remove the filter checkbox
+    function showHideZeroCheckbox(show) {
+        let existing = document.getElementById('hideZeroWinsContainer');
+        if (show) {
+            if (!existing) {
+                const label = document.createElement('label');
+                label.id = 'hideZeroWinsContainer';
+                label.style = 'display:block;margin-bottom:8px;';
+                label.innerHTML = `<input type="checkbox" id="hideZeroWins" checked> Hide persons with 0 wins`;
+                document.getElementById('clubForm').insertAdjacentElement('afterend', label);
+            }
+        } else {
+            if (existing) existing.remove();
+        }
+    }
+    // Show the checkbox when a club search starts
+    showHideZeroCheckbox(true);
     try {
         while (true) {
             const url = `https://api.foys.io/tournament/public/api/v1/persons/search?searchString=+&pageNumber=${pageNumber}&pageSize=${pageSize}`;
@@ -82,11 +101,9 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
         clubResultsDiv.innerHTML = `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul id='clubPersonsList'>` +
             filteredPersons.map((p, i) => `<li id='person-${i}'><b>${p.fullName}</b> (${p.clubName})<br>Sculling: <span class='sculling'>...</span> | Sweeping: <span class='sweeping'>...</span></li>`).join('') + '</ul>' +
             `<div style='margin-top:10px;'>Loading and filtering persons by club... (${Math.min(totalFetched, totalCount)} / ${totalCount})</div>`;
-        // Store points as they are fetched
-        let personPoints = Array(filteredPersons.length).fill(null);
         // Helper to render the list based on the filter
         function renderClubList() {
-            const hideZero = document.getElementById('hideZeroWins').checked;
+            const hideZero = document.getElementById('hideZeroWins')?.checked;
             let html = `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul id='clubPersonsList'>`;
             filteredPersons.forEach((p, i) => {
                 const points = personPoints[i];
@@ -103,7 +120,7 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
         renderClubList();
         // Listen for filter toggle
         document.getElementById('hideZeroWins').onchange = renderClubList;
-        // Fetch and display points for each person (with delay to avoid rate limits)
+        // Fetch and display points for each person (no delay)
         const fetchPointsForPerson = async (person, idx) => {
             try {
                 const overviewUrl = `https://api.foys.io/tournament/public/api/v1/persons/${person.personId}?id=${person.personId}`;
@@ -119,13 +136,12 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
                 renderClubList();
             }
         };
-        for (let i = 0; i < filteredPersons.length; i++) {
-            fetchPointsForPerson(filteredPersons[i], i);
-            await new Promise(res => setTimeout(res, 100)); // 100ms delay
-        }
-        // Display results
-        clubResultsDiv.innerHTML = `<b>Found ${filteredPersons.length} persons in this club:</b><ul>` +
-            filteredPersons.map(p => `<li>${p.fullName} (${p.clubName})</li>`).join('') + '</ul>';
+        await Promise.all(filteredPersons.map((p, i) => fetchPointsForPerson(p, i)));
+        allPointsFetched = true;
+        // Final render to ensure all points and filter are correct
+        renderClubList();
+        // When club search is done or reset, remove the checkbox
+        // (You may want to call showHideZeroCheckbox(false) when clearing results or starting a new search)
     } catch (err) {
         clubResultsDiv.textContent = err.message || 'An error occurred.';
     }

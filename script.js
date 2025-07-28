@@ -104,12 +104,22 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
         // Helper to render the list based on the filter
         function renderClubList() {
             const hideZero = document.getElementById('hideZeroWins')?.checked;
-            let html = `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul id='clubPersonsList'>`;
+            let visibleCount = 0;
+            let html = '';
+            // Count visible persons
             filteredPersons.forEach((p, i) => {
                 const points = personPoints[i];
                 let sculling = points ? points.sculling : '...';
                 let sweeping = points ? points.sweeping : '...';
-                // Hide if filter is on and both are 0 (but only if points are loaded)
+                if (hideZero && points && sculling == 0 && sweeping == 0) return;
+                visibleCount++;
+            });
+            html += `<b>Results: ${visibleCount} / ${filteredPersons.length}</b><br>`;
+            html += `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul id='clubPersonsList'>`;
+            filteredPersons.forEach((p, i) => {
+                const points = personPoints[i];
+                let sculling = points ? points.sculling : '...';
+                let sweeping = points ? points.sweeping : '...';
                 if (hideZero && points && sculling == 0 && sweeping == 0) return;
                 html += `<li id='person-${i}'><b>${p.fullName}</b> (${p.clubName})<br>Sculling: <span class='sculling'>${sculling}</span> | Sweeping: <span class='sweeping'>${sweeping}</span></li>`;
             });

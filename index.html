@@ -9,6 +9,12 @@
 <body>
     <div class="container">
         <h1>Rower Points Lookup</h1>
+        <form id="clubForm" style="margin-bottom:20px;">
+            <label for="clubInput">Search by Club/Association Name:</label>
+            <input type="text" id="clubInput" required placeholder="Enter club name">
+            <button type="submit">Search Club</button>
+        </form>
+        <div id="clubResults"></div>
         <form id="searchForm">
             <input type="text" id="nameInput" placeholder="Enter rower's name" required />
             <button type="submit">Search</button>

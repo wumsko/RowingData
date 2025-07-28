@@ -53,6 +53,7 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
     const pageSize = 10000; // Increase page size for efficiency
     let totalCount = null;
     let filteredPersons = [];
+    let totalFetched = 0;
     try {
         while (true) {
             const url = `https://api.foys.io/tournament/public/api/v1/persons/search?searchString=+&pageNumber=${pageNumber}&pageSize=${pageSize}`;
@@ -64,10 +65,13 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
             // Filter for club name (case-insensitive, partial match)
             const matches = data.items.filter(p => (p.clubName || '').toLowerCase().includes(clubName));
             filteredPersons = filteredPersons.concat(matches);
+            totalFetched += data.items.length;
             // Progress feedback
-            clubResultsDiv.textContent = `Loading and filtering persons by club... (${Math.min(pageNumber * pageSize, totalCount)} / ${totalCount})`;
-            // Stop if last page
-            if (data.items.length < pageSize) break;
+            clubResultsDiv.innerHTML = `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul>` +
+                filteredPersons.map(p => `<li>${p.fullName} (${p.clubName})</li>`).join('') + '</ul>' +
+                `<div style='margin-top:10px;'>Loading and filtering persons by club... (${Math.min(totalFetched, totalCount)} / ${totalCount})</div>`;
+            // Stop if last page or all persons fetched
+            if (data.items.length < pageSize || totalFetched >= totalCount) break;
             pageNumber++;
         }
         if (filteredPersons.length === 0) {

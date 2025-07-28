@@ -121,7 +121,7 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
                 let sculling = points ? points.sculling : '...';
                 let sweeping = points ? points.sweeping : '...';
                 if (hideZero && points && sculling == 0 && sweeping == 0) return;
-                html += `<li id='person-${i}'><b>${p.fullName}</b> (${p.clubName})<br>Sculling: <span class='sculling'>${sculling}</span> | Sweeping: <span class='sweeping'>${sweeping}</span></li>`;
+                html += `<li id='person-${i}'><b><a href='https://roeievenementen.knrb.nl/person/${p.personId}' target='_blank' rel='noopener'>${p.fullName}</a></b> (${p.clubName})<br>Sculling: <span class='sculling'>${sculling}</span> | Sweeping: <span class='sweeping'>${sweeping}</span></li>`;
             });
             html += '</ul>' + `<div style='margin-top:10px;'>Loading and filtering persons by club... (${Math.min(totalFetched, totalCount)} / ${totalCount})</div>`;
             clubResultsDiv.innerHTML = html;

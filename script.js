@@ -50,7 +50,7 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
     }
     clubResultsDiv.textContent = 'Loading and filtering persons by club...';
     let pageNumber = 1;
-    const pageSize = 100; // Increase page size for efficiency
+    const pageSize = 10000; // Increase page size for efficiency
     let totalCount = null;
     let filteredPersons = [];
     try {

@@ -82,6 +82,27 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
         clubResultsDiv.innerHTML = `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul id='clubPersonsList'>` +
             filteredPersons.map((p, i) => `<li id='person-${i}'><b>${p.fullName}</b> (${p.clubName})<br>Sculling: <span class='sculling'>...</span> | Sweeping: <span class='sweeping'>...</span></li>`).join('') + '</ul>' +
             `<div style='margin-top:10px;'>Loading and filtering persons by club... (${Math.min(totalFetched, totalCount)} / ${totalCount})</div>`;
+        // Store points as they are fetched
+        let personPoints = Array(filteredPersons.length).fill(null);
+        // Helper to render the list based on the filter
+        function renderClubList() {
+            const hideZero = document.getElementById('hideZeroWins').checked;
+            let html = `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul id='clubPersonsList'>`;
+            filteredPersons.forEach((p, i) => {
+                const points = personPoints[i];
+                let sculling = points ? points.sculling : '...';
+                let sweeping = points ? points.sweeping : '...';
+                // Hide if filter is on and both are 0 (but only if points are loaded)
+                if (hideZero && points && sculling == 0 && sweeping == 0) return;
+                html += `<li id='person-${i}'><b>${p.fullName}</b> (${p.clubName})<br>Sculling: <span class='sculling'>${sculling}</span> | Sweeping: <span class='sweeping'>${sweeping}</span></li>`;
+            });
+            html += '</ul>' + `<div style='margin-top:10px;'>Loading and filtering persons by club... (${Math.min(totalFetched, totalCount)} / ${totalCount})</div>`;
+            clubResultsDiv.innerHTML = html;
+        }
+        // Initial render
+        renderClubList();
+        // Listen for filter toggle
+        document.getElementById('hideZeroWins').onchange = renderClubList;
         // Fetch and display points for each person (with delay to avoid rate limits)
         const fetchPointsForPerson = async (person, idx) => {
             try {
@@ -91,21 +112,13 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
                 const data = await resp.json();
                 const sculling = data?.totalScullingPoints ?? 'N/A';
                 const sweeping = data?.totalSweepingPoints ?? 'N/A';
-                // Update UI
-                const li = document.getElementById(`person-${idx}`);
-                if (li) {
-                    li.querySelector('.sculling').textContent = sculling;
-                    li.querySelector('.sweeping').textContent = sweeping;
-                }
+                personPoints[idx] = { sculling, sweeping };
+                renderClubList();
             } catch (err) {
-                const li = document.getElementById(`person-${idx}`);
-                if (li) {
-                    li.querySelector('.sculling').textContent = 'Err';
-                    li.querySelector('.sweeping').textContent = 'Err';
-                }
+                personPoints[idx] = { sculling: 'Err', sweeping: 'Err' };
+                renderClubList();
             }
         };
-        // Fetch points for each person, with a small delay between requests
         for (let i = 0; i < filteredPersons.length; i++) {
             fetchPointsForPerson(filteredPersons[i], i);
             await new Promise(res => setTimeout(res, 100)); // 100ms delay

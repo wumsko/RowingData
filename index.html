@@ -3,25 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rower Points Lookup</title>
+    <title>Rowing Data Explorer</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Rower Points Lookup</h1>
-        <form id="clubForm" style="margin-bottom:20px;">
-            <label for="clubInput">Search by Club/Association Name:</label>
-            <input type="text" id="clubInput" required placeholder="Enter club name">
-            <button type="submit">Search Club</button>
-        </form>
-        <div id="clubResults"></div>
-        <form id="searchForm">
-            <input type="text" id="nameInput" placeholder="Enter rower's name" required />
-            <button type="submit">Search</button>
-        </form>
-        <div id="results" class="results"></div>
-        <div id="error" class="error"></div>
-    </div>
+    <nav class="navbar">
+        <div class="logo">Rowing Data Explorer</div>
+        <div class="tabs">
+            <button id="homeTab" class="tab active">Home</button>
+            <button id="clubTab" class="tab">Search by Club</button>
+            <button id="personTab" class="tab">Search by Person</button>
+        </div>
+    </nav>
+    <main>
+        <section id="homePage" class="page active">
+            <h1>Welcome to Rowing Data Explorer</h1>
+            <p>This app lets you explore Dutch rowing competition data in two powerful ways:</p>
+            <ul>
+                <li><b>Search by Club:</b> See all rowers in a club, filter by wins, and view their competition results.</li>
+                <li><b>Search by Person:</b> Look up a rower by name and view their wins, experience, and association.</li>
+            </ul>
+            <p>Data is sourced from the official KNRB competition database. Use the tabs above to get started!</p>
+        </section>
+        <section id="clubPage" class="page">
+            <h2>Search by Club</h2>
+            <form id="clubForm" style="margin-bottom:20px;">
+                <label for="clubInput">Club/Association Name:</label>
+                <input type="text" id="clubInput" required placeholder="Enter club name">
+                <button type="submit">Search Club</button>
+            </form>
+            <div style="margin-bottom:1.2rem;">
+                <label for="clubSort" style="margin-right:0.7rem;">Sort by:</label>
+                <select id="clubSort">
+                    <option value="points-desc">Points: High to Low</option>
+                    <option value="points-asc">Points: Low to High</option>
+                    <option value="alpha">Alphabetical</option>
+                </select>
+            </div>
+            <div id="clubResults"></div>
+        </section>
+        <section id="personPage" class="page">
+            <h2>Search by Person</h2>
+            <form id="searchForm">
+                <label for="nameInput">Rower's Name:</label>
+                <input type="text" id="nameInput" placeholder="Enter rower's name" required />
+                <button type="submit">Search</button>
+            </form>
+            <div id="results" class="results"></div>
+            <div id="error" class="error"></div>
+        </section>
+    </main>
     <script src="script.js"></script>
 </body>
 </html> 

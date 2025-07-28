@@ -105,37 +105,51 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
         }
         // Display results with placeholders for points
         clubResultsDiv.innerHTML = `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul id='clubPersonsList'>` +
-            filteredPersons.map((p, i) => `<li id='person-${i}'><b>${p.fullName}</b> (${p.clubName})<br>Sculling: <span class='sculling'>...</span> | Sweeping: <span class='sweeping'>...</span></li>`).join('') + '</ul>' +
+            filteredPersons.map((p, i) => `<li id='person-${i}'><b>${p.fullName}</b><b>(${p.clubName})</b><b>Sculling: <span class='sculling'>...</span> | Sweeping: <span class='sweeping'>...</span></b></li>`).join('') + '</ul>' +
             `<div style='margin-top:10px;'>Loading and filtering persons by club... (${Math.min(totalFetched, totalCount)} / ${totalCount})</div>`;
         // Helper to render the list based on the filter
         function renderClubList() {
             const hideZero = document.getElementById('hideZeroWins')?.checked;
-            let visibleCount = 0;
-            let html = '';
-            // Count visible persons
-            filteredPersons.forEach((p, i) => {
+            const sortOption = document.getElementById('clubSort')?.value || 'points-desc';
+            // Prepare sortable array of [person, points, index]
+            let sortable = filteredPersons.map((p, i) => {
                 const points = personPoints[i];
-                let sculling = points ? points.sculling : '...';
-                let sweeping = points ? points.sweeping : '...';
-                if (hideZero && points && sculling == 0 && sweeping == 0) return;
-                visibleCount++;
+                let sculling = points ? points.sculling : 0;
+                let sweeping = points ? points.sweeping : 0;
+                // If not loaded, treat as 0 for sorting
+                if (sculling === '...' || sculling === 'N/A' || sculling === 'Err') sculling = 0;
+                if (sweeping === '...' || sweeping === 'N/A' || sweeping === 'Err') sweeping = 0;
+                return { p, points, sculling: Number(sculling), sweeping: Number(sweeping), i };
             });
-            html += `<b>Results: ${visibleCount} / ${filteredPersons.length}</b><br>`;
+            // Filter for hideZero
+            if (hideZero) {
+                sortable = sortable.filter(obj => (obj.sculling + obj.sweeping) > 0);
+            }
+            // Sort
+            if (sortOption === 'points-desc') {
+                sortable.sort((a, b) => (b.sculling + b.sweeping) - (a.sculling + a.sweeping));
+            } else if (sortOption === 'points-asc') {
+                sortable.sort((a, b) => (a.sculling + a.sweeping) - (b.sculling + b.sweeping));
+            } else if (sortOption === 'alpha') {
+                sortable.sort((a, b) => a.p.fullName.localeCompare(b.p.fullName));
+            }
+            let visibleCount = sortable.length;
+            let html = `<b>Results: ${visibleCount} / ${filteredPersons.length}</b><br>`;
             html += `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul id='clubPersonsList'>`;
-            filteredPersons.forEach((p, i) => {
-                const points = personPoints[i];
-                let sculling = points ? points.sculling : '...';
-                let sweeping = points ? points.sweeping : '...';
-                if (hideZero && points && sculling == 0 && sweeping == 0) return;
-                html += `<li id='person-${i}'><b><a href='https://roeievenementen.knrb.nl/person-results/${p.personId}' target='_blank' rel='noopener'>${p.fullName}</a></b> (${p.clubName})<br>Sculling: <span class='sculling'>${sculling}</span> | Sweeping: <span class='sweeping'>${sweeping}</span></li>`;
-            });
+            for (const obj of sortable) {
+                const { p, points, sculling, sweeping, i } = obj;
+                let scullingDisp = points ? points.sculling : '...';
+                let sweepingDisp = points ? points.sweeping : '...';
+                html += `<li id='person-${i}' style='display:flex;align-items:center;gap:1.2rem;'><b><a href='https://roeievenementen.knrb.nl/person-results/${p.personId}' target='_blank' rel='noopener'>${p.fullName}</a></b> <span style='color:#888;font-size:0.98em;'>(${p.clubName})</span> <span style='margin-left:auto;'>Sculling: <span class='sculling'>${scullingDisp}</span> | Sweeping: <span class='sweeping'>${sweepingDisp}</span></span></li>`;
+            }
             html += '</ul>' + `<div style='margin-top:10px;'>Loading and filtering persons by club... (${Math.min(totalFetched, totalCount)} / ${totalCount})</div>`;
             clubResultsDiv.innerHTML = html;
         }
         // Initial render
         renderClubList();
-        // Listen for filter toggle
+        // Listen for filter toggle and sort change
         document.getElementById('hideZeroWins').onchange = renderClubList;
+        document.getElementById('clubSort').onchange = renderClubList;
         // Fetch and display points for each person (no delay)
         const fetchPointsForPerson = async (person, idx) => {
             try {
@@ -161,4 +175,22 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
     } catch (err) {
         clubResultsDiv.textContent = err.message || 'An error occurred.';
     }
-}); 
+});
+
+// Tab navigation logic
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    if (pageId === 'homePage') document.getElementById('homeTab').classList.add('active');
+    if (pageId === 'clubPage') document.getElementById('clubTab').classList.add('active');
+    if (pageId === 'personPage') document.getElementById('personTab').classList.add('active');
+    // Show/hide the filter checkbox only on club page
+    const hideZeroContainer = document.getElementById('hideZeroWinsContainer');
+    if (hideZeroContainer) hideZeroContainer.style.display = (pageId === 'clubPage') ? '' : 'none';
+}
+document.getElementById('homeTab').onclick = () => showPage('homePage');
+document.getElementById('clubTab').onclick = () => showPage('clubPage');
+document.getElementById('personTab').onclick = () => showPage('personPage');
+// Start on homepage
+showPage('homePage'); 

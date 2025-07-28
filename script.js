@@ -19,7 +19,13 @@ document.getElementById('searchForm').addEventListener('submit', async function(
             errorDiv.textContent = 'No person found with that name.';
             return;
         }
-        // Use the first result
+        if (searchData.items.length > 1) {
+            // Display all matches as a list
+            resultsDiv.innerHTML = `<b>Found ${searchData.items.length} persons:</b><ul>` +
+                searchData.items.map(p => `<li><b><a href='https://roeievenementen.knrb.nl/person-results/${p.personId}' target='_blank' rel='noopener'>${p.fullName}</a></b> (${p.clubName || 'No club'})</li>`).join('') + '</ul>';
+            return;
+        }
+        // Use the first result (only one person found)
         const person = searchData.items[0];
         const personId = person.personId;
         // 2. Fetch the overview/results for the person

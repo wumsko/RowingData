@@ -67,8 +67,8 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
             filteredPersons = filteredPersons.concat(matches);
             totalFetched += data.items.length;
             // Progress feedback
-            clubResultsDiv.innerHTML = `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul>` +
-                filteredPersons.map(p => `<li>${p.fullName} (${p.clubName})</li>`).join('') + '</ul>' +
+            clubResultsDiv.innerHTML = `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul id='clubPersonsList'>` +
+                filteredPersons.map((p, i) => `<li id='person-${i}'><b>${p.fullName}</b> (${p.clubName})<br>Sculling: <span class='sculling'>...</span> | Sweeping: <span class='sweeping'>...</span></li>`).join('') + '</ul>' +
                 `<div style='margin-top:10px;'>Loading and filtering persons by club... (${Math.min(totalFetched, totalCount)} / ${totalCount})</div>`;
             // Stop if last page or all persons fetched
             if (data.items.length < pageSize || totalFetched >= totalCount) break;
@@ -77,6 +77,38 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
         if (filteredPersons.length === 0) {
             clubResultsDiv.textContent = 'No persons found for this club.';
             return;
+        }
+        // Display results with placeholders for points
+        clubResultsDiv.innerHTML = `<b>Found ${filteredPersons.length} persons in this club so far:</b><ul id='clubPersonsList'>` +
+            filteredPersons.map((p, i) => `<li id='person-${i}'><b>${p.fullName}</b> (${p.clubName})<br>Sculling: <span class='sculling'>...</span> | Sweeping: <span class='sweeping'>...</span></li>`).join('') + '</ul>' +
+            `<div style='margin-top:10px;'>Loading and filtering persons by club... (${Math.min(totalFetched, totalCount)} / ${totalCount})</div>`;
+        // Fetch and display points for each person (with delay to avoid rate limits)
+        const fetchPointsForPerson = async (person, idx) => {
+            try {
+                const overviewUrl = `https://api.foys.io/tournament/public/api/v1/persons/${person.personId}?id=${person.personId}`;
+                const resp = await fetch(overviewUrl);
+                if (!resp.ok) throw new Error('Failed to fetch overview');
+                const data = await resp.json();
+                const sculling = data?.totalScullingPoints ?? 'N/A';
+                const sweeping = data?.totalSweepingPoints ?? 'N/A';
+                // Update UI
+                const li = document.getElementById(`person-${idx}`);
+                if (li) {
+                    li.querySelector('.sculling').textContent = sculling;
+                    li.querySelector('.sweeping').textContent = sweeping;
+                }
+            } catch (err) {
+                const li = document.getElementById(`person-${idx}`);
+                if (li) {
+                    li.querySelector('.sculling').textContent = 'Err';
+                    li.querySelector('.sweeping').textContent = 'Err';
+                }
+            }
+        };
+        // Fetch points for each person, with a small delay between requests
+        for (let i = 0; i < filteredPersons.length; i++) {
+            fetchPointsForPerson(filteredPersons[i], i);
+            await new Promise(res => setTimeout(res, 100)); // 100ms delay
         }
         // Display results
         clubResultsDiv.innerHTML = `<b>Found ${filteredPersons.length} persons in this club:</b><ul>` +

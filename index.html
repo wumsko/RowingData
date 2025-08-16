@@ -13,6 +13,7 @@
             <button id="homeTab" class="tab active">Home</button>
             <button id="clubTab" class="tab">Search by Club</button>
             <button id="personTab" class="tab">Search by Person</button>
+            <button id="competitionTab" class="tab">Competition Analyzer</button> <!-- New tab -->
         </div>
     </nav>
     <main>
@@ -52,7 +53,32 @@
             <div id="results" class="results"></div>
             <div id="error" class="error"></div>
         </section>
+        <section id="competitionPage" class="page">
+            <h2>Competition Analyzer</h2>
+            <p>Browse available races and view crew information for each field.</p>
+            <div id="competitionError" class="error"></div>
+            <div id="raceList"></div>
+            <div id="pagination"></div>
+        </section>
+        
+        <section id="raceFieldsPage" class="page">
+            <div class="page-header">
+                <button class="back-button" onclick="goBackToRaces()">← Back to Races</button>
+                <h2 id="raceFieldsTitle">Race Fields</h2>
+            </div>
+            <div id="competitionError2" class="error"></div>
+            <div id="fieldList"></div>
+        </section>
+        
+        <section id="fieldCrewsPage" class="page">
+            <div class="page-header">
+                <button class="back-button" onclick="goBackToFields()">← Back to Fields</button>
+                <h2 id="fieldCrewsTitle">Field Crews</h2>
+            </div>
+            <div id="competitionError3" class="error"></div>
+            <div id="crewList"></div>
+        </section>
     </main>
     <script src="script.js"></script>
 </body>
-</html> 
+</html>

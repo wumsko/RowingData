@@ -178,6 +178,399 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
 });
 
 // Tab navigation logic
+document.getElementById('homeTab').onclick = () => showPage('homePage');
+document.getElementById('clubTab').onclick = () => showPage('clubPage');
+document.getElementById('personTab').onclick = () => showPage('personPage');
+// Start on homepage
+showPage('homePage');
+
+// --- Competition Analyzer Tab Setup ---
+document.getElementById('competitionTab').onclick = () => showPage('competitionPage');
+
+const raceListDiv = document.getElementById('raceList');
+const fieldListDiv = document.getElementById('fieldList');
+const crewListDiv = document.getElementById('crewList');
+const competitionErrorDiv = document.getElementById('competitionError');
+const paginationDiv = document.getElementById('pagination');
+
+// API base URL
+const API_BASE_URL = 'https://carstenhanekamp-fastapibackend.hf.space';
+
+// State management
+let currentRaces = [];
+let currentFields = [];
+let currentRaceUrl = '';
+let currentRaceName = '';
+let currentFieldName = '';
+let currentPage = 1;
+const racesPerPage = 24;
+
+// Load available races when competition tab is opened
+async function loadAvailableRaces() {
+    try {
+        raceListDiv.innerHTML = 'Loading available races...';
+        paginationDiv.innerHTML = '';
+        competitionErrorDiv.textContent = '';
+        
+        const response = await fetch(`${API_BASE_URL}/races`);
+        if (!response.ok) throw new Error('Failed to fetch races');
+        
+        currentRaces = await response.json();
+        currentPage = 1;
+        
+        if (currentRaces.length === 0) {
+            raceListDiv.innerHTML = '<p>No races available at the moment.</p>';
+            return;
+        }
+        
+        displayRacesPage();
+        
+    } catch (error) {
+        competitionErrorDiv.textContent = `Error loading races: ${error.message}`;
+        raceListDiv.innerHTML = '';
+    }
+}
+
+// Display races for current page
+function displayRacesPage() {
+    const startIndex = (currentPage - 1) * racesPerPage;
+    const endIndex = startIndex + racesPerPage;
+    const pageRaces = currentRaces.slice(startIndex, endIndex);
+    
+    // Display races in 3-column grid
+    raceListDiv.innerHTML = '<h3>Available Races:</h3><div class="race-grid">' +
+        pageRaces.map(race => `
+            <div class="race-item" onclick="selectRace('${race.url}', '${race.name}')">
+                <div class="race-name">${race.name}</div>
+                <div class="race-date">${race.date}</div>
+            </div>
+        `).join('') + '</div>';
+    
+    // Display pagination
+    displayPagination();
+}
+
+// Display pagination controls
+function displayPagination() {
+    const totalPages = Math.ceil(currentRaces.length / racesPerPage);
+    
+    if (totalPages <= 1) {
+        paginationDiv.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '';
+    
+    // Previous button
+    paginationHTML += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+    
+    // Page numbers
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    
+    if (startPage > 1) {
+        paginationHTML += `<button onclick="changePage(1)">1</button>`;
+        if (startPage > 2) paginationHTML += '<span class="pagination-info">...</span>';
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `<button onclick="changePage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) paginationHTML += '<span class="pagination-info">...</span>';
+        paginationHTML += `<button onclick="changePage(${totalPages})">${totalPages}</button>`;
+    }
+    
+    // Next button
+    paginationHTML += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+    
+    // Page info
+    paginationHTML += `<span class="pagination-info">Page ${currentPage} of ${totalPages} (${currentRaces.length} total races)</span>`;
+    
+    paginationDiv.innerHTML = paginationHTML;
+}
+
+// Change page
+function changePage(page) {
+    if (page < 1 || page > Math.ceil(currentRaces.length / racesPerPage)) return;
+    currentPage = page;
+    displayRacesPage();
+}
+
+// Select a race and go to fields page
+async function selectRace(raceUrl, raceName) {
+    try {
+        currentRaceUrl = raceUrl;
+        currentRaceName = raceName;
+        
+        // Go to fields page
+        showPage('raceFieldsPage');
+        
+        // Update page title
+        document.getElementById('raceFieldsTitle').textContent = `Fields for ${raceName}`;
+        
+        // Load fields
+        await loadRaceFields();
+        
+    } catch (error) {
+        document.getElementById('competitionError2').textContent = `Error: ${error.message}`;
+    }
+}
+
+// Load fields for selected race
+async function loadRaceFields() {
+    try {
+        fieldListDiv.innerHTML = 'Loading fields...';
+        document.getElementById('competitionError2').textContent = '';
+        
+        const response = await fetch(`${API_BASE_URL}/fields?race_url=${encodeURIComponent(currentRaceUrl)}`);
+        if (!response.ok) throw new Error('Failed to fetch fields');
+        
+        currentFields = await response.json();
+        
+        if (currentFields.length === 0) {
+            fieldListDiv.innerHTML = '<p>No fields available for this race.</p>';
+            return;
+        }
+        
+        // Display fields as clickable items
+        fieldListDiv.innerHTML = '<div class="field-list">' +
+            currentFields.map(field => `
+                <div class="field-item" onclick="selectField('${field.url}', '${field.name}')">
+                    <div class="field-code">${field.code}</div>
+                    <div class="field-name">${field.name}</div>
+                    <div class="field-entries">${field.entries} entries</div>
+                </div>
+            `).join('') + '</div>';
+            
+    } catch (error) {
+        document.getElementById('competitionError2').textContent = `Error loading fields: ${error.message}`;
+        fieldListDiv.innerHTML = '';
+    }
+}
+
+// Select a field and go to crews page
+async function selectField(fieldUrl, fieldName) {
+    try {
+        currentFieldName = fieldName;
+        
+        // Go to crews page
+        showPage('fieldCrewsPage');
+        
+        // Update page title
+        document.getElementById('fieldCrewsTitle').textContent = `Crews for ${fieldName}`;
+        
+        // Load crews
+        await loadFieldCrews(fieldUrl);
+        
+    } catch (error) {
+        document.getElementById('competitionError2').textContent = `Error: ${error.message}`;
+    }
+}
+
+// Load crews for selected field
+async function loadFieldCrews(fieldUrl) {
+    try {
+        crewListDiv.innerHTML = 'Loading crews and fetching competitor points...';
+        document.getElementById('competitionError3').textContent = '';
+        
+        // Convert results URL to entries URL
+        const entriesUrl = fieldUrl.replace('/results/', '/entries/');
+        
+        const response = await fetch(`${API_BASE_URL}/entries?race_url=${encodeURIComponent(entriesUrl)}`);
+        if (!response.ok) throw new Error('Failed to fetch entries');
+        
+        const data = await response.json();
+        
+        if (!data.results || data.results.length === 0) {
+            crewListDiv.innerHTML = '<p>No crews available for this field.</p>';
+            return;
+        }
+        
+        // Display crews with loading state for points
+        crewListDiv.innerHTML = `
+            <div class="crew-table-container">
+                <table class="crew-table">
+                    <thead>
+                        <tr>
+                            <th>Crew Name</th>
+                            <th>Member Names</th>
+                            <th>Sculling Points</th>
+                            <th>Sweeping Points</th>
+                            <th>Total Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.results.map(crew => `
+                            <tr class="crew-row" data-crew-name="${crew.name}">
+                                <td class="crew-name">${crew.name}</td>
+                                <td class="crew-members">
+                                    ${crew.crew_members.map(member => `
+                                        <div class="member-item" data-name="${member}">
+                                            <span class="member-name">${member}</span>
+                                            <span class="member-points">
+                                                <span class="sculling-points">Loading...</span> | 
+                                                <span class="sweeping-points">Loading...</span>
+                                            </span>
+                                        </div>
+                                    `).join('')}
+                                </td>
+                                <td class="crew-sculling-total">-</td>
+                                <td class="crew-sweeping-total">-</td>
+                                <td class="crew-total-points">-</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        // Start fetching points asynchronously for each crew member
+        fetchAllCrewMemberPointsAsync(data.results);
+        
+    } catch (error) {
+        document.getElementById('competitionError3').textContent = `Error loading crews: ${error.message}`;
+        crewListDiv.innerHTML = '';
+    }
+}
+
+// Fetch points for all crew members asynchronously
+async function fetchAllCrewMemberPointsAsync(crews) {
+    // Process each crew individually for better async performance
+    for (const crew of crews) {
+        await processCrewPointsAsync(crew);
+    }
+}
+
+// Process points for a single crew asynchronously
+async function processCrewPointsAsync(crew) {
+    const crewRow = document.querySelector(`[data-crew-name="${crew.name}"]`);
+    if (!crewRow) return;
+    
+    let crewScullingTotal = 0;
+    let crewSweepingTotal = 0;
+    
+    // Handle 1x fields where crew_members is empty
+    let membersToProcess = crew.crew_members;
+    if (crew.crew_members.length === 0) {
+        // For 1x fields, inject the crew name as a member
+        membersToProcess = [crew.name];
+        
+        // Also update the HTML to show the crew name as a member
+        const crewMembersCell = crewRow.querySelector('.crew-members');
+        if (crewMembersCell) {
+            crewMembersCell.innerHTML = `
+                <div class="member-item" data-name="${crew.name}">
+                    <span class="member-name">${crew.name}</span>
+                    <span class="member-points">
+                        <span class="sculling-points">Loading...</span> | 
+                        <span class="sweeping-points">Loading...</span>
+                    </span>
+                </div>
+            `;
+        }
+    }
+    
+    // Process each member in the crew
+    for (const memberName of membersToProcess) {
+        try {
+            const points = await fetchPersonPoints(memberName);
+            
+            // Update the member's points immediately
+            const memberItem = crewRow.querySelector(`[data-name="${memberName}"]`);
+            if (memberItem) {
+                const scullingSpan = memberItem.querySelector('.sculling-points');
+                const sweepingSpan = memberItem.querySelector('.sweeping-points');
+                
+                if (scullingSpan) scullingSpan.textContent = points.sculling;
+                if (sweepingSpan) sweepingSpan.textContent = points.sweeping;
+                
+                // Add to crew totals if points are numbers
+                if (typeof points.sculling === 'number') crewScullingTotal += points.sculling;
+                if (typeof points.sweeping === 'number') crewSweepingTotal += points.sweeping;
+            }
+            
+            // Update crew totals after each member
+            updateCrewTotals(crewRow, crewScullingTotal, crewSweepingTotal);
+            
+        } catch (error) {
+            console.error(`Error fetching points for ${memberName}:`, error);
+            const memberItem = crewRow.querySelector(`[data-name="${memberName}"]`);
+            if (memberItem) {
+                const scullingSpan = memberItem.querySelector('.sculling-points');
+                const sweepingSpan = memberItem.querySelector('.sweeping-points');
+                
+                if (scullingSpan) scullingSpan.textContent = 'Error';
+                if (sweepingSpan) sweepingSpan.textContent = 'Error';
+            }
+        }
+    }
+}
+
+// Update crew totals in the display
+function updateCrewTotals(crewRow, scullingTotal, sweepingTotal) {
+    const scullingTotalCell = crewRow.querySelector('.crew-sculling-total');
+    const sweepingTotalCell = crewRow.querySelector('.crew-sweeping-total');
+    const totalPointsCell = crewRow.querySelector('.crew-total-points');
+    
+    if (scullingTotalCell) scullingTotalCell.textContent = scullingTotal;
+    if (sweepingTotalCell) sweepingTotalCell.textContent = sweepingTotal;
+    if (totalPointsCell) totalPointsCell.textContent = scullingTotal + sweepingTotal;
+}
+
+// Fetch points for a specific person
+async function fetchPersonPoints(personName) {
+    try {
+        // Search for the person to get PersonID
+        const searchUrl = `https://api.foys.io/tournament/public/api/v1/persons/search?searchString=${encodeURIComponent(personName)}&pageNumber=1&pageSize=30`;
+        const searchResp = await fetch(searchUrl);
+        if (!searchResp.ok) throw new Error('Failed to search for person');
+        
+        const searchData = await searchResp.json();
+        if (!searchData || !searchData.items || !searchData.items.length) {
+            return { sculling: 'N/A', sweeping: 'N/A' };
+        }
+        
+        // Use the first result (most likely match)
+        const person = searchData.items[0];
+        const personId = person.personId;
+        
+        // Fetch the overview/results for the person
+        const overviewUrl = `https://api.foys.io/tournament/public/api/v1/persons/${personId}?id=${personId}`;
+        const overviewResp = await fetch(overviewUrl);
+        if (!overviewResp.ok) throw new Error('Failed to fetch person overview');
+        
+        const overviewData = await overviewResp.json();
+        
+        return {
+            sculling: overviewData?.totalScullingPoints ?? 0,
+            sweeping: overviewData?.totalSweepingPoints ?? 0
+        };
+        
+    } catch (error) {
+        console.error(`Error fetching points for ${personName}:`, error);
+        return { sculling: 'Error', sweeping: 'Error' };
+    }
+}
+
+
+
+// Navigation functions
+function goBackToRaces() {
+    showPage('competitionPage');
+}
+
+function goBackToFields() {
+    showPage('raceFieldsPage');
+}
+
+// Initialize competition analyzer when tab is shown
+function initializeCompetitionAnalyzer() {
+    loadAvailableRaces();
+}
+
+// Override the showPage function to initialize competition analyzer
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
@@ -185,12 +578,15 @@ function showPage(pageId) {
     if (pageId === 'homePage') document.getElementById('homeTab').classList.add('active');
     if (pageId === 'clubPage') document.getElementById('clubTab').classList.add('active');
     if (pageId === 'personPage') document.getElementById('personTab').classList.add('active');
+    if (pageId === 'competitionPage') document.getElementById('competitionTab').classList.add('active');
+    
     // Show/hide the filter checkbox only on club page
     const hideZeroContainer = document.getElementById('hideZeroWinsContainer');
     if (hideZeroContainer) hideZeroContainer.style.display = (pageId === 'clubPage') ? '' : 'none';
+    
+    // Initialize competition analyzer when that tab is shown
+    if (pageId === 'competitionPage') {
+        initializeCompetitionAnalyzer();
+    }
 }
-document.getElementById('homeTab').onclick = () => showPage('homePage');
-document.getElementById('clubTab').onclick = () => showPage('clubPage');
-document.getElementById('personTab').onclick = () => showPage('personPage');
-// Start on homepage
-showPage('homePage'); 
+

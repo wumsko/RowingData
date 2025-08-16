@@ -18,13 +18,77 @@
     </nav>
     <main>
         <section id="homePage" class="page active">
-            <h1>Welcome to Rowing Data Explorer</h1>
-            <p>This app lets you explore Dutch rowing competition data in two powerful ways:</p>
-            <ul>
-                <li><b>Search by Club:</b> See all rowers in a club, filter by wins, and view their competition results.</li>
-                <li><b>Search by Person:</b> Look up a rower by name and view their wins, experience, and association.</li>
-            </ul>
-            <p>Data is sourced from the official KNRB competition database. Use the tabs above to get started!</p>
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <div class="hero-content">
+                    <h1 class="hero-title">Analyze the Competition for Your Next Race</h1>
+                    <p class="hero-subtitle">Get ahead of the competition with detailed insights into every rower's performance. Know your opponents before you hit the water.</p>
+                    
+                    <!-- Hero Search Bar -->
+                    <div class="hero-search">
+                        <form id="heroSearchForm" class="hero-search-form">
+                            <div class="search-input-wrapper">
+                                <input type="text" id="heroRaceSearch" placeholder="Search for races..." required>
+                                <button type="submit" class="hero-search-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <path d="m21 21-4.35-4.35"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Cards Section -->
+            <div class="features-section">
+                <h2 class="section-title">Why Rowing Data Explorer?</h2>
+                <p class="section-subtitle">Built for serious rowers who want to win</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Competition Scout</h3>
+                        <p>Analyze every field in upcoming races. See your opponents' sculling and sweeping points before the race even starts.</p>
+                        <div class="feature-stats">
+                            <span>Real-time data</span>
+                            <span>Point analysis</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">👥</div>
+                        <h3>Club Intelligence</h3>
+                        <p>Discover the strength of any club. See all rowers, their points, and understand your competition's depth.</p>
+                        <div class="feature-stats">
+                            <span>Club rankings</span>
+                            <span>Performance metrics</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🔍</div>
+                        <h3>Individual Analysis</h3>
+                        <p>Research any rower's performance history. Track their sculling and sweeping points across all competitions.</p>
+                        <div class="feature-stats">
+                            <span>Personal stats</span>
+                            <span>History tracking</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Races Section -->
+            <div class="recent-races-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Races</h2>
+                    <a href="#" class="view-all-link" onclick="showPage('competitionPage'); return false;">View All Races →</a>
+                </div>
+                <div id="recentRacesGrid" class="recent-races-grid">
+                    <div class="loading-placeholder">Loading recent races...</div>
+                </div>
+            </div>
         </section>
         <section id="clubPage" class="page">
             <h2>Search by Club</h2>

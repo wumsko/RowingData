@@ -1,3 +1,6 @@
+// API base URL - must be defined first
+const API_BASE_URL = 'https://carstenhanekamp-fastapibackend.hf.space';
+
 document.getElementById('searchForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const name = document.getElementById('nameInput').value.trim();
@@ -184,6 +187,108 @@ document.getElementById('personTab').onclick = () => showPage('personPage');
 // Start on homepage
 showPage('homePage');
 
+// Load recent races for homepage
+loadRecentRaces();
+
+// Hero search functionality
+document.getElementById('heroSearchForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const searchTerm = document.getElementById('heroRaceSearch').value.trim();
+    if (!searchTerm) return;
+    
+    // Go to competition page and search
+    showPage('competitionPage');
+    
+    // Wait for the page to load, then search
+    setTimeout(() => {
+        searchRaces(searchTerm);
+    }, 100);
+});
+
+// Load recent races for homepage
+async function loadRecentRaces() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/races`);
+        if (!response.ok) throw new Error('Failed to fetch races');
+        
+        const races = await response.json();
+        const recentRaces = races.slice(0, 6); // Get first 6 races
+        
+        const recentRacesGrid = document.getElementById('recentRacesGrid');
+        if (recentRaces.length === 0) {
+            recentRacesGrid.innerHTML = '<div class="no-races">No recent races available</div>';
+            return;
+        }
+        
+        recentRacesGrid.innerHTML = recentRaces.map(race => `
+            <div class="recent-race-card" onclick="goToRace('${race.url}', '${race.name}')">
+                <div class="race-card-header">
+                    <h3 class="race-card-title">${race.name}</h3>
+                    <span class="race-card-date">${race.date}</span>
+                </div>
+                <div class="race-card-actions">
+                    <span class="view-details">View Details →</span>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading recent races:', error);
+        document.getElementById('recentRacesGrid').innerHTML = 
+            '<div class="error-loading">Unable to load recent races</div>';
+    }
+}
+
+// Go to race from homepage
+function goToRace(raceUrl, raceName) {
+    currentRaceUrl = raceUrl;
+    currentRaceName = raceName;
+    showPage('raceFieldsPage');
+    document.getElementById('raceFieldsTitle').textContent = `Fields for ${raceName}`;
+    loadRaceFields();
+}
+
+// Search races function
+async function searchRaces(searchTerm) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/races`);
+        if (!response.ok) throw new Error('Failed to fetch races');
+        
+        const allRaces = await response.json();
+        
+        // Filter races based on search term
+        const filteredRaces = allRaces.filter(race => 
+            race.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            race.date.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        if (filteredRaces.length === 0) {
+            raceListDiv.innerHTML = `<div class="no-results">
+                <h3>No races found for "${searchTerm}"</h3>
+                <p>Try a different search term or browse all available races.</p>
+            </div>`;
+            paginationDiv.innerHTML = '';
+            return;
+        }
+        
+        // Update current races and display
+        currentRaces = filteredRaces;
+        currentPage = 1;
+        displayRacesPage();
+        
+        // Show search results header
+        raceListDiv.insertAdjacentHTML('afterbegin', 
+            `<div class="search-results-header">
+                <h3>Search Results for "${searchTerm}"</h3>
+                <p>Found ${filteredRaces.length} race${filteredRaces.length !== 1 ? 's' : ''}</p>
+            </div>`
+        );
+        
+    } catch (error) {
+        competitionErrorDiv.textContent = `Error searching races: ${error.message}`;
+    }
+}
+
 // --- Competition Analyzer Tab Setup ---
 document.getElementById('competitionTab').onclick = () => showPage('competitionPage');
 
@@ -193,8 +298,7 @@ const crewListDiv = document.getElementById('crewList');
 const competitionErrorDiv = document.getElementById('competitionError');
 const paginationDiv = document.getElementById('pagination');
 
-// API base URL
-const API_BASE_URL = 'https://carstenhanekamp-fastapibackend.hf.space';
+
 
 // State management
 let currentRaces = [];

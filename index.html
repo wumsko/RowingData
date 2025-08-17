@@ -10,10 +10,10 @@
     <nav class="navbar">
         <div class="logo">Rowing Data Explorer</div>
         <div class="tabs">
-            <button id="homeTab" class="tab active">Home</button>
-            <button id="clubTab" class="tab">Search by Club</button>
-            <button id="personTab" class="tab">Search by Person</button>
-            <button id="competitionTab" class="tab">Competition Analyzer</button> <!-- New tab -->
+            <button data-page="homePage" id="homeTab" class="tab active">Home</button>
+            <button data-page="clubPage" id="clubTab" class="tab">Search by Club</button>
+            <button data-page="personPage" id="personTab" class="tab">Search by Person</button>
+            <button data-page="competitionPage" id="competitionTab" class="tab">Competition Analyzer</button>
         </div>
     </nav>
     <main>
@@ -22,15 +22,17 @@
             <div class="hero-section">
                 <div class="hero-content">
                     <h1 class="hero-title">Analyze the Competition for Your Next Race</h1>
-                    <p class="hero-subtitle">Get ahead of the competition with detailed insights into every rower's performance. Know your opponents before you hit the water.</p>
+                    <p class="hero-subtitle">The ultimate scouting tool for competitive rowers. Get detailed performance data, analyze every crew in your next race, and gain the edge you need to win.</p>
                     
                     <!-- Hero Search Bar -->
                     <div class="hero-search">
                         <form id="heroSearchForm" class="hero-search-form">
+                            <label for="heroRaceSearch" class="visually-hidden">Search for races</label> <!-- Accessibility improvement -->
                             <div class="search-input-wrapper">
-                                <input type="text" id="heroRaceSearch" placeholder="Search for races..." required>
+                                <input type="text" id="heroRaceSearch" placeholder="Search for races...">
                                 <button type="submit" class="hero-search-btn">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <title>Search Icon</title> <!-- Accessibility improvement -->
                                         <circle cx="11" cy="11" r="8"></circle>
                                         <path d="m21 21-4.35-4.35"></path>
                                     </svg>
@@ -43,37 +45,46 @@
 
             <!-- Feature Cards Section -->
             <div class="features-section">
-                <h2 class="section-title">Why Rowing Data Explorer?</h2>
-                <p class="section-subtitle">Built for serious rowers who want to win</p>
-                
                 <div class="feature-grid">
                     <div class="feature-card">
-                        <div class="feature-icon">🎯</div>
-                        <h3>Competition Scout</h3>
-                        <p>Analyze every field in upcoming races. See your opponents' sculling and sweeping points before the race even starts.</p>
-                        <div class="feature-stats">
-                            <span>Real-time data</span>
-                            <span>Point analysis</span>
+                        <div class="feature-card-content">
+                            <div class="feature-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                            </div>
+                            <h3>Competition Scout</h3>
+                            <p>Analyze every field in upcoming races. See your opponents' sculling and sweeping points before the race even starts.</p>
+                            <div class="feature-stats">
+                                <span>Real-time data</span>
+                                <span>Point analysis</span>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="feature-card">
-                        <div class="feature-icon">👥</div>
-                        <h3>Club Intelligence</h3>
-                        <p>Discover the strength of any club. See all rowers, their points, and understand your competition's depth.</p>
-                        <div class="feature-stats">
-                            <span>Club rankings</span>
-                            <span>Performance metrics</span>
+                        <div class="feature-card-content">
+                            <div class="feature-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            </div>
+                            <h3>Club Intelligence</h3>
+                            <p>Discover the strength of any club. See all rowers, their points, and understand your competition's depth.</p>
+                            <div class="feature-stats">
+                                <span>Club rankings</span>
+                                <span>Performance metrics</span>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="feature-card">
-                        <div class="feature-icon">🔍</div>
-                        <h3>Individual Analysis</h3>
-                        <p>Research any rower's performance history. Track their sculling and sweeping points across all competitions.</p>
-                        <div class="feature-stats">
-                            <span>Personal stats</span>
-                            <span>History tracking</span>
+                        <div class="feature-card-content">
+                            <div class="feature-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                            </div>
+                            <h3>Individual Analysis</h3>
+                            <p>Research any rower's performance history. Track their sculling and sweeping points across all competitions.</p>
+                            <div class="feature-stats">
+                                <span>Personal stats</span>
+                                <span>History tracking</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -83,7 +94,7 @@
             <div class="recent-races-section">
                 <div class="section-header">
                     <h2 class="section-title">Recent Races</h2>
-                    <a href="#" class="view-all-link" onclick="showPage('competitionPage'); return false;">View All Races →</a>
+                    <a href="#competitionPage" id="viewAllRacesLink" class="view-all-link">View All Races →</a>
                 </div>
                 <div id="recentRacesGrid" class="recent-races-grid">
                     <div class="loading-placeholder">Loading recent races...</div>
@@ -92,12 +103,12 @@
         </section>
         <section id="clubPage" class="page">
             <h2>Search by Club</h2>
-            <form id="clubForm" style="margin-bottom:20px;">
+            <form id="clubForm" class="form-group">
                 <label for="clubInput">Club/Association Name:</label>
                 <input type="text" id="clubInput" required placeholder="Enter club name">
                 <button type="submit">Search Club</button>
             </form>
-            <div style="margin-bottom:1.2rem;">
+            <div class="sort-controls">
                 <label for="clubSort" style="margin-right:0.7rem;">Sort by:</label>
                 <select id="clubSort">
                     <option value="points-desc">Points: High to Low</option>
@@ -127,7 +138,7 @@
         
         <section id="raceFieldsPage" class="page">
             <div class="page-header">
-                <button class="back-button" onclick="goBackToRaces()">← Back to Races</button>
+                <button id="backToRacesBtn" class="back-button">← Back to Races</button>
                 <h2 id="raceFieldsTitle">Race Fields</h2>
             </div>
             <div id="competitionError2" class="error"></div>
@@ -136,7 +147,7 @@
         
         <section id="fieldCrewsPage" class="page">
             <div class="page-header">
-                <button class="back-button" onclick="goBackToFields()">← Back to Fields</button>
+                <button id="backToFieldsBtn" class="back-button">← Back to Fields</button>
                 <h2 id="fieldCrewsTitle">Field Crews</h2>
             </div>
             <div id="competitionError3" class="error"></div>

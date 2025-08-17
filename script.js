@@ -180,10 +180,23 @@ document.getElementById('clubForm').addEventListener('submit', async function(e)
     }
 });
 
-// Tab navigation logic
-document.getElementById('homeTab').onclick = () => showPage('homePage');
-document.getElementById('clubTab').onclick = () => showPage('clubPage');
-document.getElementById('personTab').onclick = () => showPage('personPage');
+// --- Event Listeners Setup ---
+function initializeEventListeners() {
+    // Main Tab Navigation
+    document.querySelector('.tabs').addEventListener('click', (e) => {
+        if (e.target.matches('.tab')) {
+            const pageId = e.target.dataset.page;
+            if (pageId) showPage(pageId);
+        }
+    });
+
+    // Back Buttons
+    document.getElementById('backToRacesBtn').addEventListener('click', () => showPage('competitionPage'));
+    document.getElementById('backToFieldsBtn').addEventListener('click', () => showPage('raceFieldsPage'));
+
+    // "View All Races" link on homepage
+    document.getElementById('viewAllRacesLink').addEventListener('click', () => showPage('competitionPage'));
+}
 // Start on homepage
 showPage('homePage');
 
@@ -207,21 +220,34 @@ document.getElementById('heroSearchForm').addEventListener('submit', async funct
 
 // Load recent races for homepage
 async function loadRecentRaces() {
+    const recentRacesGrid = document.getElementById('recentRacesGrid');
+    
+    // Show skeleton loaders
+    let skeletonHTML = '';
+    for (let i = 0; i < 6; i++) {
+        skeletonHTML += `
+            <div class="skeleton-card">
+                <div class="skeleton skeleton-line title"></div>
+                <div class="skeleton skeleton-line short"></div>
+            </div>
+        `;
+    }
+    recentRacesGrid.innerHTML = skeletonHTML;
+
     try {
         const response = await fetch(`${API_BASE_URL}/races`);
         if (!response.ok) throw new Error('Failed to fetch races');
         
         const races = await response.json();
         const recentRaces = races.slice(0, 6); // Get first 6 races
-        
-        const recentRacesGrid = document.getElementById('recentRacesGrid');
+
         if (recentRaces.length === 0) {
             recentRacesGrid.innerHTML = '<div class="no-races">No recent races available</div>';
             return;
         }
         
         recentRacesGrid.innerHTML = recentRaces.map(race => `
-            <div class="recent-race-card" onclick="goToRace('${race.url}', '${race.name}')">
+            <div class="recent-race-card" data-race-url="${race.url}" data-race-name="${race.name}">
                 <div class="race-card-header">
                     <h3 class="race-card-title">${race.name}</h3>
                     <span class="race-card-date">${race.date}</span>
@@ -231,7 +257,6 @@ async function loadRecentRaces() {
                 </div>
             </div>
         `).join('');
-        
     } catch (error) {
         console.error('Error loading recent races:', error);
         document.getElementById('recentRacesGrid').innerHTML = 
@@ -239,14 +264,18 @@ async function loadRecentRaces() {
     }
 }
 
-// Go to race from homepage
-function goToRace(raceUrl, raceName) {
-    currentRaceUrl = raceUrl;
-    currentRaceName = raceName;
-    showPage('raceFieldsPage');
-    document.getElementById('raceFieldsTitle').textContent = `Fields for ${raceName}`;
-    loadRaceFields();
-}
+// Event delegation for recent races grid
+document.getElementById('recentRacesGrid').addEventListener('click', (e) => {
+    const card = e.target.closest('.recent-race-card');
+    if (card) {
+        const { raceUrl, raceName } = card.dataset;
+        currentRaceUrl = raceUrl;
+        currentRaceName = raceName;
+        showPage('raceFieldsPage');
+        document.getElementById('raceFieldsTitle').textContent = `Fields for ${raceName}`;
+        loadRaceFields();
+    }
+});
 
 // Search races function
 async function searchRaces(searchTerm) {
@@ -290,8 +319,6 @@ async function searchRaces(searchTerm) {
 }
 
 // --- Competition Analyzer Tab Setup ---
-document.getElementById('competitionTab').onclick = () => showPage('competitionPage');
-
 const raceListDiv = document.getElementById('raceList');
 const fieldListDiv = document.getElementById('fieldList');
 const crewListDiv = document.getElementById('crewList');
@@ -344,7 +371,7 @@ function displayRacesPage() {
     // Display races in 3-column grid
     raceListDiv.innerHTML = '<h3>Available Races:</h3><div class="race-grid">' +
         pageRaces.map(race => `
-            <div class="race-item" onclick="selectRace('${race.url}', '${race.name}')">
+            <div class="race-item" data-race-url="${race.url}" data-race-name="${race.name}">
                 <div class="race-name">${race.name}</div>
                 <div class="race-date">${race.date}</div>
             </div>
@@ -366,28 +393,28 @@ function displayPagination() {
     let paginationHTML = '';
     
     // Previous button
-    paginationHTML += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+    paginationHTML += `<button data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
     
     // Page numbers
     const startPage = Math.max(1, currentPage - 2);
     const endPage = Math.min(totalPages, currentPage + 2);
     
     if (startPage > 1) {
-        paginationHTML += `<button onclick="changePage(1)">1</button>`;
+        paginationHTML += `<button data-page="1">1</button>`;
         if (startPage > 2) paginationHTML += '<span class="pagination-info">...</span>';
     }
     
     for (let i = startPage; i <= endPage; i++) {
-        paginationHTML += `<button onclick="changePage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+        paginationHTML += `<button data-page="${i}" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
     }
     
     if (endPage < totalPages) {
         if (endPage < totalPages - 1) paginationHTML += '<span class="pagination-info">...</span>';
-        paginationHTML += `<button onclick="changePage(${totalPages})">${totalPages}</button>`;
+        paginationHTML += `<button data-page="${totalPages}">${totalPages}</button>`;
     }
     
     // Next button
-    paginationHTML += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+    paginationHTML += `<button data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
     
     // Page info
     paginationHTML += `<span class="pagination-info">Page ${currentPage} of ${totalPages} (${currentRaces.length} total races)</span>`;
@@ -395,32 +422,36 @@ function displayPagination() {
     paginationDiv.innerHTML = paginationHTML;
 }
 
-// Change page
-function changePage(page) {
-    if (page < 1 || page > Math.ceil(currentRaces.length / racesPerPage)) return;
-    currentPage = page;
-    displayRacesPage();
-}
-
-// Select a race and go to fields page
-async function selectRace(raceUrl, raceName) {
-    try {
-        currentRaceUrl = raceUrl;
-        currentRaceName = raceName;
-        
-        // Go to fields page
-        showPage('raceFieldsPage');
-        
-        // Update page title
-        document.getElementById('raceFieldsTitle').textContent = `Fields for ${raceName}`;
-        
-        // Load fields
-        await loadRaceFields();
-        
-    } catch (error) {
-        document.getElementById('competitionError2').textContent = `Error: ${error.message}`;
+// Event delegation for pagination
+paginationDiv.addEventListener('click', (e) => {
+    if (e.target.matches('button') && e.target.dataset.page) {
+        const page = parseInt(e.target.dataset.page, 10);
+        if (page < 1 || page > Math.ceil(currentRaces.length / racesPerPage)) return;
+        currentPage = page;
+        displayRacesPage();
     }
-}
+});
+
+// Event delegation for race list
+raceListDiv.addEventListener('click', async (e) => {
+    const raceItem = e.target.closest('.race-item');
+    if (raceItem) {
+        try {
+            const { raceUrl, raceName } = raceItem.dataset;
+            currentRaceUrl = raceUrl;
+            currentRaceName = raceName;
+            
+            showPage('raceFieldsPage');
+            document.getElementById('raceFieldsTitle').textContent = `Fields for ${raceName}`;
+            
+            await loadRaceFields();
+            
+        } catch (error) {
+            document.getElementById('competitionError2').textContent = `Error: ${error.message}`;
+        }
+    }
+});
+
 
 // Load fields for selected race
 async function loadRaceFields() {
@@ -441,7 +472,7 @@ async function loadRaceFields() {
         // Display fields as clickable items
         fieldListDiv.innerHTML = '<div class="field-list">' +
             currentFields.map(field => `
-                <div class="field-item" onclick="selectField('${field.url}', '${field.name}')">
+                <div class="field-item" data-field-url="${field.url}" data-field-name="${field.name}">
                     <div class="field-code">${field.code}</div>
                     <div class="field-name">${field.name}</div>
                     <div class="field-entries">${field.entries} entries</div>
@@ -454,24 +485,24 @@ async function loadRaceFields() {
     }
 }
 
-// Select a field and go to crews page
-async function selectField(fieldUrl, fieldName) {
-    try {
-        currentFieldName = fieldName;
-        
-        // Go to crews page
-        showPage('fieldCrewsPage');
-        
-        // Update page title
-        document.getElementById('fieldCrewsTitle').textContent = `Crews for ${fieldName}`;
-        
-        // Load crews
-        await loadFieldCrews(fieldUrl);
-        
-    } catch (error) {
-        document.getElementById('competitionError2').textContent = `Error: ${error.message}`;
+// Event delegation for field list
+fieldListDiv.addEventListener('click', async (e) => {
+    const fieldItem = e.target.closest('.field-item');
+    if (fieldItem) {
+        try {
+            const { fieldUrl, fieldName } = fieldItem.dataset;
+            currentFieldName = fieldName;
+            
+            showPage('fieldCrewsPage');
+            document.getElementById('fieldCrewsTitle').textContent = `Crews for ${fieldName}`;
+            
+            await loadFieldCrews(fieldUrl);
+            
+        } catch (error) {
+            document.getElementById('competitionError2').textContent = `Error: ${error.message}`;
+        }
     }
-}
+});
 
 // Load crews for selected field
 async function loadFieldCrews(fieldUrl) {
@@ -658,31 +689,24 @@ async function fetchPersonPoints(personName) {
     }
 }
 
-
-
-// Navigation functions
-function goBackToRaces() {
-    showPage('competitionPage');
-}
-
-function goBackToFields() {
-    showPage('raceFieldsPage');
-}
-
 // Initialize competition analyzer when tab is shown
 function initializeCompetitionAnalyzer() {
-    loadAvailableRaces();
+    // Only load if the race list is empty to avoid re-fetching on every tab click
+    if (currentRaces.length === 0) {
+        loadAvailableRaces();
+    }
 }
 
 // Override the showPage function to initialize competition analyzer
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
+    
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    if (pageId === 'homePage') document.getElementById('homeTab').classList.add('active');
-    if (pageId === 'clubPage') document.getElementById('clubTab').classList.add('active');
-    if (pageId === 'personPage') document.getElementById('personTab').classList.add('active');
-    if (pageId === 'competitionPage') document.getElementById('competitionTab').classList.add('active');
+    const activeTab = document.querySelector(`.tab[data-page="${pageId}"]`);
+    if (activeTab) {
+        activeTab.classList.add('active');
+    }
     
     // Show/hide the filter checkbox only on club page
     const hideZeroContainer = document.getElementById('hideZeroWinsContainer');
@@ -694,3 +718,5 @@ function showPage(pageId) {
     }
 }
 
+// Initialize all event listeners on script load
+initializeEventListeners();

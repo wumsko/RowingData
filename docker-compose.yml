@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  web:
+    # The 'build: .' tells Docker Compose to look for a Dockerfile
+    # in the current directory and build an image from it.
+    build: .
+    ports:
+      # Map port 8080 on the host to port 80 in the container.
+      # You can change 8080 to any other available port on your host.
+      - "8080:80"

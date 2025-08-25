@@ -1,5 +1,5 @@
 // API base URL - must be defined first
-const API_BASE_URL = 'https://carstenhanekamp-fastapibackend.hf.space';
+const API_BASE_URL = window.location.origin;
 
 document.getElementById('searchForm').addEventListener('submit', async function(e) {
     e.preventDefault();

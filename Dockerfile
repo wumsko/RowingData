@@ -27,12 +27,12 @@ COPY script.js /app/static/
 COPY style.css /app/static/
 
 # Expose port
-EXPOSE 8000
+EXPOSE 80
 
 # Create a startup script
 RUN echo '#!/bin/bash\n\
 cd /app\n\
-uvicorn APIBackend:app --host 0.0.0.0 --port 8000\n\
+uvicorn APIBackend:app --host 0.0.0.0 --port 80\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 # Set the startup command
